@@ -53,18 +53,25 @@ for token, prices in snapshot.items():
     if net_profit_percent > 0.5:
         msg = f"""🔥 NET ARBITRAGE OPPORTUNITY
 
+if orca < raydium:
+    buy_dex = "ORCA"
+    sell_dex = "RAYDIUM"
+else:
+    buy_dex = "RAYDIUM"
+    sell_dex = "ORCA"
+
+msg = f"""🔥 NET ARBITRAGE OPPORTUNITY
+
 TOKEN: {token}
+
+BUY ON: {buy_dex}
+SELL ON: {sell_dex}
+
 NET PROFIT: {net_profit_percent:.2f}%
 GROSS SPREAD: {gross_spread*100:.2f}%
 
-BUY: {buy}
-SELL: {sell}"""
-
-        print("SEND SIGNAL")
-        send_telegram(msg)
-
-    else:
-        print("NO TRADE (after fees)")
+BUY PRICE: {buy}
+SELL PRICE: {sell}"""
 
 
 
