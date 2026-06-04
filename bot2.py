@@ -25,6 +25,26 @@ for token, prices in snapshot.items():
     print(f"SPREAD: {spread:.2f}%")
 
     if spread > 1.0:
-        print("🔥 OPPORTUNITÀ INTERESSANTE")
-    else:
-        print("❌ NO TRADE")
+    msg = f"""🔥 *ARBITRAGE OPPORTUNITY*
+
+TOKEN: {token}
+ORCA: {orca}
+RAYDIUM: {raydium}
+SPREAD: {spread:.2f}%"""
+
+    print(msg)
+    send_telegram(msg)
+
+def send_telegram(message):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+
+    try:
+        requests.post(url, data=payload, timeout=10)
+    except Exception as e:
+        print("Telegram error:", e)
