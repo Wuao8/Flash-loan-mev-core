@@ -5,7 +5,7 @@ from price_provider import get_market_snapshot
 
 from price_provider import get_market_snapshot
 
-print("SOLANA ARBITRAGE ENGINE v2 (STABLE ARCH)")
+print("SOLANA ARBITRAGE ENGINE v3 (TELEGRAM ENABLED)")
 
 snapshot = get_market_snapshot()
 
@@ -25,15 +25,19 @@ for token, prices in snapshot.items():
     print(f"SPREAD: {spread:.2f}%")
 
     if spread > 1.0:
-    msg = f"""🔥 *ARBITRAGE OPPORTUNITY*
+        msg = f"""🔥 ARBITRAGE OPPORTUNITY
 
 TOKEN: {token}
 ORCA: {orca}
 RAYDIUM: {raydium}
 SPREAD: {spread:.2f}%"""
 
-    print(msg)
-    send_telegram(msg)
+        print("SEND:", msg)
+        send_telegram(msg)
+    else:
+        print("NO TRADE")
+
+
 
 def send_telegram(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
