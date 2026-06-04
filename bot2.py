@@ -28,6 +28,12 @@ def send_telegram(message):
 
 
 
+print("SOLANA ARBITRAGE ENGINE v4 (CLEAN MODE)")
+
+snapshot = get_market_snapshot()
+
+best_trade = None
+
 for token, prices in snapshot.items():
 
     orca = prices["orca"]
@@ -38,26 +44,37 @@ for token, prices in snapshot.items():
 
     gross_spread = (sell - buy) / buy
 
-    # --- COSTI REALISTICI ---
     ORCA_FEE = 0.003
     RAYDIUM_FEE = 0.0025
     SLIPPAGE = 0.002
 
-    total_fees = ORCA_FEE + RAYDIUM_FEE + SLIPPAGE
-
-    net_profit = gross_spread - total_fees
-    net_profit_percent = net_profit * 100
+    net_profit_percent = (gross_spread - ORCA_FEE - RAYDIUM_FEE - SLIPPAGE) * 100
 
     print(f"\nTOKEN: {token}")
-    print(f"ORCA: {orca}")
-    print(f"RAYDIUM: {raydium}")
-    print(f"GROSS SPREAD: {gross_spread*100:.2f}%")
     print(f"NET PROFIT: {net_profit_percent:.2f}%")
 
+    if net_profit_percent > 0.5:
 
-if net_profit_percent > 0.5:
+        trade = {
+            "token": token,
+            "net": net_profit_percent,
+            "gross": gross_spread * 100,
+            "buy": buy,
+            "sell": sell,
+            "orca": orca,
+            "raydium": raydium
+        }
 
-    if orca < raydium:
+        if best_trade is None or trade["net"] > best_trade["net"]:
+            best_trade = trade
+
+    else:
+        print("NO TRADE (after fees)")
+
+
+if best_trade:
+
+    if best_trade["orca"] < best_trade["raydium"]:
         buy_dex = "ORCA"
         sell_dex = "RAYDIUM"
     else:
@@ -65,19 +82,18 @@ if net_profit_percent > 0.5:
         sell_dex = "ORCA"
 
     msg = (
-        f"NET ARBITRAGE OPPORTUNITY\n\n"
-        f"TOKEN: {token}\n\n"
+        "TOP ARBITRAGE SIGNAL\n\n"
+        f"TOKEN: {best_trade['token']}\n\n"
         f"BUY ON: {buy_dex}\n"
         f"SELL ON: {sell_dex}\n\n"
-        f"NET PROFIT: {net_profit_percent:.2f}%\n"
-        f"GROSS SPREAD: {gross_spread*100:.2f}%\n\n"
-        f"BUY PRICE: {buy}\n"
-        f"SELL PRICE: {sell}"
+        f"NET PROFIT: {best_trade['net']:.2f}%\n"
+        f"GROSS SPREAD: {best_trade['gross']:.2f}%\n\n"
+        f"BUY PRICE: {best_trade['buy']}\n"
+        f"SELL PRICE: {best_trade['sell']}"
     )
 
-    print("SEND SIGNAL")
+    print("\nSEND BEST SIGNAL")
     send_telegram(msg)
 
 else:
-    print("NO TRADE (after fees)")
-
+    print("\nNO GOOD OPPORTUNITIES")
