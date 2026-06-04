@@ -17,25 +17,39 @@ for token, prices in snapshot.items():
     buy = min(orca, raydium)
     sell = max(orca, raydium)
 
-    spread = ((sell - buy) / buy) * 100
+    gross_spread = (sell - buy) / buy
+
+    # --- COSTI REALISTICI ---
+    ORCA_FEE = 0.003
+    RAYDIUM_FEE = 0.0025
+    SLIPPAGE = 0.002
+
+    total_fees = ORCA_FEE + RAYDIUM_FEE + SLIPPAGE
+
+    net_profit = gross_spread - total_fees
+    net_profit_percent = net_profit * 100
 
     print(f"\nTOKEN: {token}")
     print(f"ORCA: {orca}")
     print(f"RAYDIUM: {raydium}")
-    print(f"SPREAD: {spread:.2f}%")
+    print(f"GROSS SPREAD: {gross_spread*100:.2f}%")
+    print(f"NET PROFIT: {net_profit_percent:.2f}%")
 
-    if spread > 1.0:
-        msg = f"""🔥 ARBITRAGE OPPORTUNITY
+    if net_profit_percent > 0.5:
+        msg = f"""🔥 NET ARBITRAGE OPPORTUNITY
 
 TOKEN: {token}
-ORCA: {orca}
-RAYDIUM: {raydium}
-SPREAD: {spread:.2f}%"""
+NET PROFIT: {net_profit_percent:.2f}%
+GROSS SPREAD: {gross_spread*100:.2f}%
 
-        print("SEND:", msg)
+BUY: {buy}
+SELL: {sell}"""
+
+        print("SEND SIGNAL")
         send_telegram(msg)
+
     else:
-        print("NO TRADE")
+        print("NO TRADE (after fees)")
 
 
 
