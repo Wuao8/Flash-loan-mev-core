@@ -1,20 +1,37 @@
-import requests
+print("SOLANA ARBITRAGE ENGINE v0")
 
-print("JUPITER QUOTE ENGINE START")
-
-url = "https://quote-api.jup.ag/v6/quote"
-
-params = {
-    "inputMint": "So11111111111111111111111111111111111111112",  # SOL
-    "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", # USDC
-    "amount": 100000000,  # 0.1 SOL
-    "slippageBps": 50
+# --- MOCK PRICES (fase 1) ---
+orca_prices = {
+    "SOL": 100.0,
+    "JUP": 0.75,
+    "BONK": 0.00002
 }
 
-try:
-    r = requests.get(url, params=params, timeout=10)
-    print("STATUS:", r.status_code)
-    print("RESPONSE:")
-    print(r.text[:500])
-except Exception as e:
-    print("ERROR:", e)
+raydium_prices = {
+    "SOL": 101.2,
+    "JUP": 0.78,
+    "BONK": 0.000021
+}
+
+# --- ENGINE ---
+def calculate_spread(token):
+    buy = min(orca_prices[token], raydium_prices[token])
+    sell = max(orca_prices[token], raydium_prices[token])
+
+    spread = ((sell - buy) / buy) * 100
+
+    return buy, sell, spread
+
+# --- ANALYSIS ---
+for token in orca_prices.keys():
+    buy, sell, spread = calculate_spread(token)
+
+    print(f"\nTOKEN: {token}")
+    print(f"BUY PRICE: {buy}")
+    print(f"SELL PRICE: {sell}")
+    print(f"SPREAD: {spread:.2f}%")
+
+    if spread > 1.0:
+        print("🔥 OPPORTUNITÀ INTERESSANTE")
+    else:
+        print("❌ NO TRADE")
