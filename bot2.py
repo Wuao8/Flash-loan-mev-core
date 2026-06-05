@@ -38,7 +38,7 @@ for token, prices in snapshot.items():
     print(f"DEX: {dex}")
 
     # Spread
-    spread = (binance - dex) / dex
+    spread = (coinbase - dex) / dex
     spread_pct = abs(spread * 100)
 
     # SCORE COMPONENTS
