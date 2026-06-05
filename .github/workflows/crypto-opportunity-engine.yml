@@ -1,4 +1,4 @@
-name: Solana Arbitrage Bot
+name: Crypto Opportunity Engine
 
 on:
   workflow_dispatch:
