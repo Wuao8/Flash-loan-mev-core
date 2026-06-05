@@ -64,7 +64,7 @@ for token, prices in snapshot.items():
         "token": token,
         "score": score,
         "spread": spread_pct,
-        "cex": coinbase,
+        "cex": cex,
         "dex": dex
     })
 
