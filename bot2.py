@@ -23,6 +23,17 @@ def send_telegram(message):
         print("Telegram ERROR:", e)
 
 
+if cex < dex:
+    buy = "CEX (Coinbase)"
+    sell = "DEX (Pancake via DexScreener)"
+else:
+    buy = "DEX (Pancake via DexScreener)"
+    sell = "CEX (Coinbase)"
+
+f"BUY ON: {buy}\n"
+f"SELL ON: {sell}\n\n"
+
+
 opportunities = []
 
 # =========================
