@@ -78,7 +78,7 @@ def get_market_snapshot():
         print(f"{token} CEX:", cex_price)
         print(f"{token} DEX:", dex_price)
 
-        if binance_price is None or dex_price is None:
+        if cex_price is None or dex_price is None:
             print(f"SKIP {token} (missing data)")
             continue
 
