@@ -30,7 +30,7 @@ opportunities = []
 # =========================
 for token, prices in snapshot.items():
 
-    cex = prices["coinbase"]
+    cex = prices["cex"]
     dex = prices["dex"]
 
     print(f"\nTOKEN: {token}")
