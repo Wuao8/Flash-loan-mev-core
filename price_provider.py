@@ -77,6 +77,10 @@ def get_market_snapshot():
         binance_price = get_binance_price(data["binance"])
         dex_price = get_dex_price(data["dexscreener"])
 
+
+        print(f"{token} BINANCE:", binance_price)
+        print(f"{token} DEX:", dex_price)
+
         if binance_price is None or dex_price is None:
             print(f"SKIP {token} (missing data)")
             continue
