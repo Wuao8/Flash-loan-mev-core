@@ -83,9 +83,9 @@ def get_market_snapshot():
             continue
 
         snapshot[token] = {
-            "cex": get_coinbase_price,
-            "dex": get_dex_price
-        }
+            "cex": cex_price,
+            "dex": dex_price
+}
 
     print("BNB CEX vs DEX SNAPSHOT READY")
 
