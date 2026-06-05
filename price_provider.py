@@ -26,7 +26,15 @@ def get_binance_price(symbol):
     try:
         r = requests.get(BINANCE_URL, params={"symbol": symbol}, timeout=10)
         data = r.json()
-        return float(data["price"])
+
+        price = data.get("price")
+
+        if price is None:
+            print("BINANCE BAD RESPONSE:", data)
+            return None
+
+        return float(price)
+
     except Exception as e:
         print("BINANCE ERROR:", e)
         return None
