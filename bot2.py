@@ -8,33 +8,39 @@ snapshot = get_market_snapshot()
 print("SNAPSHOT:", snapshot)
 
 
-def send_telegram(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+for token, prices in snapshot.items():
 
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": message
-    }
+    cex = prices["cex"]
+    dex = prices["dex"]
 
-    try:
-        r = requests.post(url, data=payload, timeout=10)
-        print("Telegram status:", r.status_code)
-    except Exception as e:
-        print("Telegram ERROR:", e)
+    if cex is None or dex is None:
+        continue
+
+    if cex < dex:
+        buy = "CEX (Coinbase)"
+        sell = "DEX (Pancake via DexScreener)"
+    else:
+        buy = "DEX (Pancake via DexScreener)"
+        sell = "CEX (Coinbase)"
+
+    spread = abs((dex - cex) / cex) * 100
+
+    score = min(spread * 20, 100)  # placeholder coerente
+
+    msg = (
+        f"🚨 <b>TOP OPPORTUNITY</b>\n\n"
+        f"<b>TOKEN:</b> {token}\n\n"
+        f"<b>BUY ON:</b> {buy}\n"
+        f"<b>SELL ON:</b> {sell}\n\n"
+        f"<b>CEX PRICE:</b> {cex}\n"
+        f"<b>DEX PRICE:</b> {dex}\n\n"
+        f"<b>SPREAD:</b> {spread:.2f}%\n"
+        f"<b>SCORE:</b> {score:.1f}/100\n"
+    )
+
+    send_telegram(msg)
 
 
-if cex < dex:
-    buy = "CEX (Coinbase)"
-    sell = "DEX (Pancake via DexScreener)"
-else:
-    buy = "DEX (Pancake via DexScreener)"
-    sell = "CEX (Coinbase)"
-
-f"BUY ON: {buy}\n"
-f"SELL ON: {sell}\n\n"
-
-
-opportunities = []
 
 # =========================
 # SCORING LOOP
