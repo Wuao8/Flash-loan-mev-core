@@ -34,6 +34,7 @@ snapshot = get_market_snapshot()
 
 best_trade = None
 
+
 for token, prices in snapshot.items():
 
     binance = prices["binance"]
@@ -43,35 +44,41 @@ for token, prices in snapshot.items():
     print(f"BINANCE: {binance}")
     print(f"DEX: {dex}")
 
-    # spread reale tra mercati
+    # 1. spread base
     spread = (binance - dex) / dex
+    spread_pct = abs(spread * 100)
 
-    spread_percent = spread * 100
+    # 2. scoring factors
 
-    print(f"SPREAD: {spread_percent:.2f}%")
+    spread_score = min(spread_pct * 40, 100)   # più spread = meglio
 
-    # soglia minima per evitare rumore
-    MIN_EDGE = 0.5
+    liquidity_score = 70  # placeholder (poi lo rendiamo reale)
 
-    if abs(spread_percent) > MIN_EDGE:
+    stability_score = 60   # placeholder (poi volatility module)
 
-        direction = "DEX -> CEX" if binance > dex else "CEX -> DEX"
+    cost_penalty = 30      # fee + slippage impatto stimato
 
-        net_signal = {
-            "token": token,
-            "binance": binance,
-            "dex": dex,
-            "spread": spread_percent,
-            "direction": direction
-        }
+    # 3. FINAL SCORE
+    score = (
+        spread_score * 0.5 +
+        liquidity_score * 0.2 +
+        stability_score * 0.2 -
+        cost_penalty * 0.1
+    )
 
-        if spread_percent > 0:
-            print("POSSIBILE OPPORTUNITÀ (BUY DEX / SELL CEX)")
-        else:
-            print("POSSIBILE OPPORTUNITÀ (BUY CEX / SELL DEX)")
+    score = max(0, min(100, score))
 
+    print(f"SPREAD: {spread_pct:.2f}%")
+    print(f"SCORE: {score:.1f}/100")
+
+    # 4. decisione
+    if score > 70:
+        print("🔥 STRONG OPPORTUNITY")
+    elif score > 50:
+        print("⚠️ WEAK OPPORTUNITY")
     else:
-        print("NO TRADE (spread too small)")
+        print("NO TRADE")
+
 
     print(f"\nTOKEN: {token}")
     print(f"NET PROFIT: {net_profit_percent:.2f}%")
