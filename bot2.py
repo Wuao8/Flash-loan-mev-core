@@ -36,11 +36,11 @@ best_trade = None
 
 for token, prices in snapshot.items():
 
-    orca = prices["orca"]
-    raydium = prices["raydium"]
+    binance = prices["binance"]
+    dex = prices["dex"]
 
-    buy = min(orca, raydium)
-    sell = max(orca, raydium)
+    buy = min(binance, dex)
+    sell = max(binance, dex)
 
     gross_spread = (sell - buy) / buy
 
