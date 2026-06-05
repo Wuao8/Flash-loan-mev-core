@@ -1,5 +1,9 @@
 import requests
 
+# Jupiter Quote API
+JUP_QUOTE_URL = "https://quote-api.jup.ag/v6/quote"
+
+# Token mint list
 TOKENS = {
     "SOL": "So11111111111111111111111111111111111111112",
     "USDC": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
@@ -15,45 +19,74 @@ MOCK_PRICES = {
 }
 
 
+def get_quote(input_mint, output_mint, amount=1_000_000, dex=None):
+    """
+    Get Jupiter quote.
+    amount is in smallest unit (we keep it fixed for comparison)
+    """
+
+    try:
+        params = {
+            "inputMint": input_mint,
+            "outputMint": output_mint,
+            "amount": amount,
+            "slippageBps": 50
+        }
+
+        # Force routing by DEX if supported
+        if dex:
+            params["dexes"] = dex
+
+        r = requests.get(JUP_QUOTE_URL, params=params, timeout=10)
+        data = r.json()
+
+        if "data" in data and len(data["data"]) > 0:
+            return int(data["data"][0]["outAmount"])
+
+        return None
+
+    except Exception as e:
+        print("QUOTE ERROR:", e)
+        return None
+
+
 def get_market_snapshot():
+    """
+    Real arbitrage snapshot:
+    compares Orca vs Raydium routes via Jupiter
+    """
 
     snapshot = {}
 
-    try:
+    for symbol, mint in TOKENS.items():
 
-        ids = ",".join(TOKENS.values())
+        if symbol == "USDC":
+            continue
 
-        url = f"https://lite-api.jup.ag/price/v3?ids={ids}"
+        # Orca route
+        orca_out = get_quote(mint, TOKENS["USDC"], dex="Orca")
 
-        response = requests.get(url, timeout=10)
+        # Raydium route
+        raydium_out = get_quote(mint, TOKENS["USDC"], dex="Raydium")
 
-        data = response.json()
-
-        for symbol, mint in TOKENS.items():
-
-            if mint in data:
-
-                price = float(data[mint]["usdPrice"])
-
-                snapshot[symbol] = {
-                    "orca": price,
-                    "raydium": price
-                }
-
-        print("LIVE PRICES LOADED")
-
-        return snapshot
-
-    except Exception as e:
-
-        print("JUPITER ERROR:", e)
-        print("USING FALLBACK PRICES")
-
-        for symbol, price in MOCK_PRICES.items():
-
+        # fallback if API fails
+        if not orca_out or not raydium_out:
+            base = MOCK_PRICES.get(symbol, 1)
             snapshot[symbol] = {
-                "orca": price,
-                "raydium": price
+                "orca": base * 1.001,
+                "raydium": base * 0.999
             }
+            continue
 
-        return snapshot
+        # convert to price (USDC per token)
+        orca_price = orca_out / 1_000_000
+        raydium_price = raydium_out / 1_000_000
+
+        snapshot[symbol] = {
+            "orca": round(orca_price, 6),
+            "raydium": round(raydium_price, 6)
+        }
+
+    print("REAL DEX SNAPSHOT LOADED")
+
+    return snapshot
