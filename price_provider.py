@@ -1,12 +1,17 @@
 import requests
 
-MEXC_TICKER_URL = "https://api.mexc.com/api/v3/ticker/price"
 MEXC_24H_URL = "https://api.mexc.com/api/v3/ticker/24hr"
+MEXC_PRICE_URL = "https://api.mexc.com/api/v3/ticker/price"
 
-DEXSCREENER_URL = "https://api.dexscreener.com/latest/dex/search?q="
+DEX_URL = "https://api.dexscreener.com/latest/dex/search?q="
+
+TOP_MARKET_CAP_EXCLUDE = {
+    "BTC", "ETH", "BNB", "SOL", "XRP", "USDT", "USDC", "DOGE"
+}
 
 
-def get_top_mexc_symbols(limit=100):
+def get_midcap_symbols(limit=100):
+
     try:
         r = requests.get(MEXC_24H_URL, timeout=10)
         data = r.json()
@@ -18,11 +23,19 @@ def get_top_mexc_symbols(limit=100):
         )
 
         symbols = []
+
         for item in sorted_data:
-            symbol = item["symbol"]
-            if symbol.endswith("USDT"):
-                base = symbol.replace("USDT", "")
-                symbols.append(base)
+            sym = item["symbol"]
+
+            if not sym.endswith("USDT"):
+                continue
+
+            base = sym.replace("USDT", "")
+
+            if base in TOP_MARKET_CAP_EXCLUDE:
+                continue
+
+            symbols.append(base)
 
             if len(symbols) >= limit:
                 break
@@ -30,13 +43,14 @@ def get_top_mexc_symbols(limit=100):
         return symbols
 
     except Exception as e:
-        print("MEXC TOP ERROR:", e)
+        print("MEXC LIST ERROR:", e)
         return []
 
 
 def get_mexc_price(symbol):
+
     try:
-        r = requests.get(MEXC_TICKER_URL, timeout=10)
+        r = requests.get(MEXC_PRICE_URL, timeout=10)
         data = r.json()
 
         for item in data:
@@ -50,17 +64,48 @@ def get_mexc_price(symbol):
         return None
 
 
-def get_dex_price(symbol):
+def get_bsc_dex_price(symbol):
+
     try:
-        r = requests.get(DEXSCREENER_URL + symbol, timeout=10)
+        r = requests.get(DEX_URL + symbol, timeout=10)
         data = r.json()
 
         pairs = data.get("pairs", [])
         if not pairs:
             return None
 
-        best = max(pairs, key=lambda x: float(x.get("liquidity", {}).get("usd", 0)))
-        return float(best["priceUsd"])
+        # FILTER BSC ONLY + USDT/WBNB + LIQUIDITY CHECK
+        valid_pairs = []
+
+        for p in pairs:
+
+            chain = p.get("chainId", "")
+            liquidity = float(p.get("liquidity", {}).get("usd", 0))
+            quote = p.get("quoteToken", {}).get("symbol", "")
+
+            if chain != "bsc":
+                continue
+
+            if liquidity < 100000:
+                continue
+
+            if quote not in ["USDT", "WBNB", "BUSD"]:
+                continue
+
+            price = float(p.get("priceUsd", 0))
+
+            if price <= 0:
+                continue
+
+            valid_pairs.append((price, liquidity))
+
+        if not valid_pairs:
+            return None
+
+        # choose most liquid
+        best = max(valid_pairs, key=lambda x: x[1])
+
+        return best[0]
 
     except Exception as e:
         print("DEX ERROR:", e)
@@ -68,23 +113,28 @@ def get_dex_price(symbol):
 
 
 def get_market_snapshot():
+
     snapshot = {}
 
-    symbols = get_top_mexc_symbols(100)
+    symbols = get_midcap_symbols(100)
 
-    for symbol in symbols:
+    for s in symbols:
 
-        cex = get_mexc_price(symbol)
-        dex = get_dex_price(symbol)
+        cex = get_mexc_price(s)
+        dex = get_bsc_dex_price(s)
 
-        if cex is None or dex is None:
+        if not cex or not dex:
             continue
 
-        snapshot[symbol] = {
+        # sanity check anti-bufala
+        if dex > cex * 10 or dex < cex / 10:
+            continue
+
+        snapshot[s] = {
             "cex": cex,
             "dex": dex
         }
 
-        print(symbol, "OK")
+        print("OK:", s)
 
     return snapshot
