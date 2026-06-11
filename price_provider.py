@@ -70,7 +70,7 @@ def get_mexc_price(symbol):
 def get_bsc_dex_price(symbol):
 
     try:
-        r = requests.get(DEX_URL + symbol, timeout=10)
+        r = requests.get(DEX_URL + symbol, timeout=10) 
         data = r.json()
 
         pairs = data.get("pairs", [])
