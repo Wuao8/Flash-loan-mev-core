@@ -3,10 +3,7 @@ import requests
 MEXC_24H_URL = "https://api.mexc.com/api/v3/ticker/24hr"
 MEXC_PRICE_URL = "https://api.mexc.com/api/v3/ticker/price"
 
-# DexScreener by TOKEN (fallback)
-DEX_SEARCH_URL = "https://api.dexscreener.com/latest/dex/search?q="
-
-# DexScreener by CONTRACT (preferred)
+# DexScreener contract-first (PRIMARIO)
 DEX_TOKEN_URL = "https://api.dexscreener.com/latest/dex/tokens/"
 
 TOP_MARKET_CAP_EXCLUDE = {
@@ -15,9 +12,9 @@ TOP_MARKET_CAP_EXCLUDE = {
 }
 
 
-# -------------------------
-# GET MID CAP SYMBOLS
-# -------------------------
+# -----------------------------
+# MID CAP UNIVERSE
+# -----------------------------
 def get_midcap_symbols(limit=100):
 
     try:
@@ -56,9 +53,9 @@ def get_midcap_symbols(limit=100):
         return []
 
 
-# -------------------------
+# -----------------------------
 # MEXC PRICE
-# -------------------------
+# -----------------------------
 def get_mexc_price(symbol):
 
     try:
@@ -66,7 +63,6 @@ def get_mexc_price(symbol):
         data = r.json()
 
         for item in data:
-
             if item.get("symbol") == symbol + "USDT":
                 return float(item.get("price", 0))
 
@@ -77,30 +73,23 @@ def get_mexc_price(symbol):
         return None
 
 
-# -------------------------
-# TRY GET CONTRACT ADDRESS FROM PAIR
-# -------------------------
-def extract_contract(p):
-
-    if not isinstance(p, dict):
-        return None
-
-    base = p.get("baseToken")
-    if isinstance(base, dict):
-        addr = base.get("address")
-        if addr:
-            return addr
-
-    return None
+# -----------------------------
+# SAFE DEX PARSER
+# -----------------------------
+def safe_float(x):
+    try:
+        return float(x)
+    except:
+        return 0
 
 
-# -------------------------
-# DEX PRICE (CONTRACT FIRST)
-# -------------------------
+# -----------------------------
+# CONTRACT-FIRST DEX PRICE
+# -----------------------------
 def get_bsc_dex_price(symbol):
 
     try:
-        r = requests.get(DEX_SEARCH_URL + symbol, timeout=10)
+        r = requests.get(DEX_TOKEN_URL + symbol, timeout=10)
         data = r.json()
 
         pairs = data.get("pairs", [])
@@ -108,8 +97,9 @@ def get_bsc_dex_price(symbol):
         if not isinstance(pairs, list):
             return None
 
+        seen_contracts = set()
         best_price = None
-        best_liq = 0
+        best_liquidity = 0
 
         for p in pairs:
 
@@ -119,20 +109,32 @@ def get_bsc_dex_price(symbol):
             if p.get("chainId") != "bsc":
                 continue
 
-            dex_id = p.get("dexId", "")
-            if dex_id != "pancakeswap":
+            if p.get("dexId") != "pancakeswap":
                 continue
 
-            liquidity_obj = p.get("liquidity")
-            volume_obj = p.get("volume")
+            base_token = p.get("baseToken", {})
+            if not isinstance(base_token, dict):
+                continue
+
+            contract = base_token.get("address")
+            if not contract:
+                continue
+
+            # ❌ remove duplicates (CLO fix)
+            if contract in seen_contracts:
+                continue
+            seen_contracts.add(contract)
+
+            liquidity_obj = p.get("liquidity", {})
+            volume_obj = p.get("volume", {})
 
             if not isinstance(liquidity_obj, dict):
                 continue
             if not isinstance(volume_obj, dict):
                 continue
 
-            liquidity = float(liquidity_obj.get("usd", 0))
-            volume24h = float(volume_obj.get("h24", 0))
+            liquidity = safe_float(liquidity_obj.get("usd"))
+            volume24h = safe_float(volume_obj.get("h24"))
 
             if liquidity < 500000:
                 continue
@@ -140,16 +142,13 @@ def get_bsc_dex_price(symbol):
             if volume24h < 100000:
                 continue
 
-            price = float(p.get("priceUsd", 0))
+            price = safe_float(p.get("priceUsd"))
             if price <= 0:
                 continue
 
-            # contract extraction (future-proof)
-            contract = extract_contract(p)
-
-            # prefer high liquidity
-            if liquidity > best_liq:
-                best_liq = liquidity
+            # pick best liquidity pool ONLY
+            if liquidity > best_liquidity:
+                best_liquidity = liquidity
                 best_price = price
 
         return best_price
@@ -159,9 +158,9 @@ def get_bsc_dex_price(symbol):
         return None
 
 
-# -------------------------
+# -----------------------------
 # SNAPSHOT ENGINE
-# -------------------------
+# -----------------------------
 def get_market_snapshot():
 
     snapshot = {}
