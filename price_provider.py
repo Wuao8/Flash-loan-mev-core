@@ -27,7 +27,7 @@ def get_midcap_symbols(limit=100):
 
         for item in sorted_data:
 
-            sym = item["symbol"]
+            sym = item.get("symbol", "")
 
             if not sym.endswith("USDT"):
                 continue
@@ -57,8 +57,8 @@ def get_mexc_price(symbol):
 
         for item in data:
 
-            if item["symbol"] == symbol + "USDT":
-                return float(item["price"])
+            if item.get("symbol") == symbol + "USDT":
+                return float(item.get("price", 0))
 
         return None
 
@@ -74,7 +74,6 @@ def get_bsc_dex_price(symbol):
         data = r.json()
 
         pairs = data.get("pairs", [])
-
         if not pairs:
             return None
 
@@ -85,27 +84,28 @@ def get_bsc_dex_price(symbol):
             if not isinstance(p, dict):
                 continue
 
+            # 🔥 FORCE ONLY PANCAKESWAP
+            if p.get("dexId") != "pancakeswap":
+                continue
+
+            chain = p.get("chainId", "")
+            if chain != "bsc":
+                continue
+
             liquidity_obj = p.get("liquidity")
             volume_obj = p.get("volume")
             quote_obj = p.get("quoteToken")
 
             if not isinstance(liquidity_obj, dict):
                 continue
-
             if not isinstance(volume_obj, dict):
                 continue
-
             if not isinstance(quote_obj, dict):
                 continue
-
-            chain = p.get("chainId", "")
 
             liquidity = float(liquidity_obj.get("usd", 0))
             volume24h = float(volume_obj.get("h24", 0))
             quote = quote_obj.get("symbol", "")
-
-            if chain != "bsc":
-                continue
 
             if liquidity < 500000:
                 continue
@@ -117,7 +117,6 @@ def get_bsc_dex_price(symbol):
                 continue
 
             price = float(p.get("priceUsd", 0))
-
             if price <= 0:
                 continue
 
@@ -126,11 +125,7 @@ def get_bsc_dex_price(symbol):
         if not valid_pairs:
             return None
 
-        best = max(
-            valid_pairs,
-            key=lambda x: x[1]
-        )
-
+        best = max(valid_pairs, key=lambda x: x[1])
         return best[0]
 
     except Exception as e:
@@ -152,10 +147,9 @@ def get_market_snapshot():
         if not cex or not dex:
             continue
 
-        # sanity check più severo
+        # sanity check anti mismatch
         if dex > cex * 2:
             continue
-
         if dex < cex / 2:
             continue
 
@@ -164,10 +158,6 @@ def get_market_snapshot():
             "dex": dex
         }
 
-        print(
-            f"OK: {s} | "
-            f"CEX={cex:.6f} | "
-            f"DEX={dex:.6f}"
-        )
+        print(f"OK: {s} | CEX={cex} | DEX={dex}")
 
     return snapshot
