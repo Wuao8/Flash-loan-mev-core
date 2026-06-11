@@ -3,7 +3,11 @@ import requests
 MEXC_24H_URL = "https://api.mexc.com/api/v3/ticker/24hr"
 MEXC_PRICE_URL = "https://api.mexc.com/api/v3/ticker/price"
 
-DEX_URL = "https://api.dexscreener.com/latest/dex/search?q="
+# DexScreener by TOKEN (fallback)
+DEX_SEARCH_URL = "https://api.dexscreener.com/latest/dex/search?q="
+
+# DexScreener by CONTRACT (preferred)
+DEX_TOKEN_URL = "https://api.dexscreener.com/latest/dex/tokens/"
 
 TOP_MARKET_CAP_EXCLUDE = {
     "BTC", "ETH", "BNB", "SOL", "XRP",
@@ -11,6 +15,9 @@ TOP_MARKET_CAP_EXCLUDE = {
 }
 
 
+# -------------------------
+# GET MID CAP SYMBOLS
+# -------------------------
 def get_midcap_symbols(limit=100):
 
     try:
@@ -49,6 +56,9 @@ def get_midcap_symbols(limit=100):
         return []
 
 
+# -------------------------
+# MEXC PRICE
+# -------------------------
 def get_mexc_price(symbol):
 
     try:
@@ -67,45 +77,62 @@ def get_mexc_price(symbol):
         return None
 
 
+# -------------------------
+# TRY GET CONTRACT ADDRESS FROM PAIR
+# -------------------------
+def extract_contract(p):
+
+    if not isinstance(p, dict):
+        return None
+
+    base = p.get("baseToken")
+    if isinstance(base, dict):
+        addr = base.get("address")
+        if addr:
+            return addr
+
+    return None
+
+
+# -------------------------
+# DEX PRICE (CONTRACT FIRST)
+# -------------------------
 def get_bsc_dex_price(symbol):
 
     try:
-        r = requests.get(DEX_URL + symbol, timeout=10) 
+        r = requests.get(DEX_SEARCH_URL + symbol, timeout=10)
         data = r.json()
 
         pairs = data.get("pairs", [])
-        if not pairs:
+
+        if not isinstance(pairs, list):
             return None
 
-        valid_pairs = []
+        best_price = None
+        best_liq = 0
 
         for p in pairs:
 
             if not isinstance(p, dict):
                 continue
 
-            # 🔥 FORCE ONLY PANCAKESWAP
-            if p.get("dexId") != "pancakeswap":
+            if p.get("chainId") != "bsc":
                 continue
 
-            chain = p.get("chainId", "")
-            if chain != "bsc":
+            dex_id = p.get("dexId", "")
+            if dex_id != "pancakeswap":
                 continue
 
             liquidity_obj = p.get("liquidity")
             volume_obj = p.get("volume")
-            quote_obj = p.get("quoteToken")
 
             if not isinstance(liquidity_obj, dict):
                 continue
             if not isinstance(volume_obj, dict):
                 continue
-            if not isinstance(quote_obj, dict):
-                continue
 
             liquidity = float(liquidity_obj.get("usd", 0))
             volume24h = float(volume_obj.get("h24", 0))
-            quote = quote_obj.get("symbol", "")
 
             if liquidity < 500000:
                 continue
@@ -113,26 +140,28 @@ def get_bsc_dex_price(symbol):
             if volume24h < 100000:
                 continue
 
-            if quote not in ["USDT", "WBNB", "BUSD"]:
-                continue
-
             price = float(p.get("priceUsd", 0))
             if price <= 0:
                 continue
 
-            valid_pairs.append((price, liquidity))
+            # contract extraction (future-proof)
+            contract = extract_contract(p)
 
-        if not valid_pairs:
-            return None
+            # prefer high liquidity
+            if liquidity > best_liq:
+                best_liq = liquidity
+                best_price = price
 
-        best = max(valid_pairs, key=lambda x: x[1])
-        return best[0]
+        return best_price
 
     except Exception as e:
         print("DEX ERROR:", e)
         return None
 
 
+# -------------------------
+# SNAPSHOT ENGINE
+# -------------------------
 def get_market_snapshot():
 
     snapshot = {}
@@ -147,9 +176,10 @@ def get_market_snapshot():
         if not cex or not dex:
             continue
 
-        # sanity check anti mismatch
+        # anti noise band
         if dex > cex * 2:
             continue
+
         if dex < cex / 2:
             continue
 
