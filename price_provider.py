@@ -6,7 +6,8 @@ MEXC_PRICE_URL = "https://api.mexc.com/api/v3/ticker/price"
 DEX_URL = "https://api.dexscreener.com/latest/dex/search?q="
 
 TOP_MARKET_CAP_EXCLUDE = {
-    "BTC", "ETH", "BNB", "SOL", "XRP", "USDT", "USDC", "DOGE"
+    "BTC", "ETH", "BNB", "SOL", "XRP",
+    "USDT", "USDC", "DOGE"
 }
 
 
@@ -25,6 +26,7 @@ def get_midcap_symbols(limit=100):
         symbols = []
 
         for item in sorted_data:
+
             sym = item["symbol"]
 
             if not sym.endswith("USDT"):
@@ -54,6 +56,7 @@ def get_mexc_price(symbol):
         data = r.json()
 
         for item in data:
+
             if item["symbol"] == symbol + "USDT":
                 return float(item["price"])
 
@@ -71,39 +74,60 @@ def get_bsc_dex_price(symbol):
         data = r.json()
 
         pairs = data.get("pairs", [])
+
         if not pairs:
             return None
 
-        # FILTER BSC ONLY + USDT/WBNB + LIQUIDITY CHECK
         valid_pairs = []
 
         for p in pairs:
 
             chain = p.get("chainId", "")
-            liquidity = float(p.get("liquidity", {}).get("usd", 0))
-            quote = p.get("quoteToken", {}).get("symbol", "")
+
+            liquidity = float(
+                p.get("liquidity", {}).get("usd", 0)
+            )
+
+            volume24h = float(
+                p.get("volume", {}).get("h24", 0)
+            )
+
+            quote = p.get(
+                "quoteToken", {}
+            ).get(
+                "symbol", ""
+            )
 
             if chain != "bsc":
                 continue
 
-            if liquidity < 100000:
+            if liquidity < 500000:
+                continue
+
+            if volume24h < 100000:
                 continue
 
             if quote not in ["USDT", "WBNB", "BUSD"]:
                 continue
 
-            price = float(p.get("priceUsd", 0))
+            price = float(
+                p.get("priceUsd", 0)
+            )
 
             if price <= 0:
                 continue
 
-            valid_pairs.append((price, liquidity))
+            valid_pairs.append(
+                (price, liquidity)
+            )
 
         if not valid_pairs:
             return None
 
-        # choose most liquid
-        best = max(valid_pairs, key=lambda x: x[1])
+        best = max(
+            valid_pairs,
+            key=lambda x: x[1]
+        )
 
         return best[0]
 
@@ -126,8 +150,11 @@ def get_market_snapshot():
         if not cex or not dex:
             continue
 
-        # sanity check anti-bufala
-        if dex > cex * 10 or dex < cex / 10:
+        # sanity check più severo
+        if dex > cex * 2:
+            continue
+
+        if dex < cex / 2:
             continue
 
         snapshot[s] = {
@@ -135,6 +162,10 @@ def get_market_snapshot():
             "dex": dex
         }
 
-        print("OK:", s)
+        print(
+            f"OK: {s} | "
+            f"CEX={cex:.6f} | "
+            f"DEX={dex:.6f}"
+        )
 
     return snapshot
