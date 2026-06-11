@@ -23,6 +23,10 @@ for token, prices in snapshot.items():
     dex = prices["dex"]
 
     spread = abs((cex - dex) / cex) * 100
+    
+    if spread < 1.5:
+        continue
+    
     if spread > 15:
         continue
         
