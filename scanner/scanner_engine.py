@@ -1,9 +1,17 @@
+from scanner.token_list import get_tokens
+from scanner.dex_prices import get_base_dex_price
+from scanner.arbitrage import find_opportunity
 from scanner.profit_simulator import compute_net_profit
 
 
-def scan_market():
-    tokens = get_tokens()
+# MOCK CEX (temporaneo)
+def get_mock_cex_price(symbol):
+    return 1.0
 
+
+def scan_market():
+
+    tokens = get_tokens()
     opportunities = []
 
     print(f"SCANNING {len(tokens)} TOKENS ON BASE...")
@@ -18,11 +26,25 @@ def scan_market():
 
         op = find_opportunity(symbol, cex_price, dex_price)
 
-        if op:
-            enriched = compute_net_profit(op)
+        if not op:
+            continue
 
-            if enriched["net_profit"] > 0:
-                opportunities.append(enriched)
-                print("PROFIT OPPORTUNITY:", enriched)
+        enriched = compute_net_profit(op)
 
-    return sorted(opportunities, key=lambda x: x["net_profit"], reverse=True)
+        # filtro finale: solo profitto reale positivo
+        if enriched["net_profit"] > 0:
+
+            opportunities.append(enriched)
+
+            print(
+                f"PROFIT OK {symbol} | "
+                f"NET=${enriched['net_profit']:.2f} | "
+                f"SPREAD={enriched['spread']:.2f}%"
+            )
+
+    # ordina per profitto netto
+    opportunities.sort(key=lambda x: x["net_profit"], reverse=True)
+
+    print(f"VALID OPPORTUNITIES: {len(opportunities)}")
+
+    return opportunities
