@@ -57,16 +57,17 @@ contract FlashLoanExecutor is FlashLoanSimpleReceiverBase {
         return true;
     }
 
-   function _executeStrategy(bytes calldata params) internal {
+  function _executeStrategy(bytes calldata params) internal {
 
     address tokenIn;
     address tokenMid;
     address router1;
     address router2;
     uint256 amount;
+    uint256 minProfit;
 
-    (tokenIn, tokenMid, router1, router2, amount) =
-        abi.decode(params, (address, address, address, address, uint256));
+    (tokenIn, tokenMid, router1, router2, amount, minProfit) =
+        abi.decode(params, (address, address, address, address, uint256, uint256));
 
     uint256 balanceBefore = IERC20(tokenIn).balanceOf(address(this));
 
@@ -82,8 +83,14 @@ contract FlashLoanExecutor is FlashLoanSimpleReceiverBase {
 
     uint256 balanceAfter = IERC20(tokenIn).balanceOf(address(this));
 
-    // 🔥 PROFIT CHECK ON-CHAIN
-    require(balanceAfter > balanceBefore, "NO_PROFIT_REVERT");
+    uint256 profit = 0;
+
+    if (balanceAfter > balanceBefore) {
+        profit = balanceAfter - balanceBefore;
+    }
+
+    // 🔥 HARD FILTER
+    require(profit >= minProfit, "PROFIT_TOO_LOW_REVERT");
 }
 
 
