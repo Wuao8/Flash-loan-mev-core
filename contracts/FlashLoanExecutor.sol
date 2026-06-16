@@ -93,3 +93,34 @@ contract FlashLoanExecutor is FlashLoanSimpleReceiverBase {
         );
     }
 }
+
+function _swap(
+    address router,
+    address tokenIn,
+    address tokenOut,
+    uint256 amount
+) internal {
+
+    // bytes payload standard UniswapV2-style
+    bytes memory data = abi.encodeWithSignature(
+        "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+        amount,
+        0,
+        _path(tokenIn, tokenOut),
+        address(this),
+        block.timestamp
+    );
+
+    (bool success, ) = router.call(data);
+    require(success, "SWAP_FAILED");
+}
+
+function _path(address tokenIn, address tokenOut)
+    internal
+    pure
+    returns (address[] memory path)
+{
+    path = new address[](2);
+    path[0] = tokenIn;
+    path[1] = tokenOut;
+}
