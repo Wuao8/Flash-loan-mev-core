@@ -59,11 +59,6 @@ contract FlashLoanExecutor is FlashLoanSimpleReceiverBase {
 
    function _executeStrategy(bytes calldata params) internal {
 
-    /*
-        params encoding (semplice per ora):
-        [tokenIn, tokenMid, router1, router2, amount]
-    */
-
     address tokenIn;
     address tokenMid;
     address router1;
@@ -73,18 +68,25 @@ contract FlashLoanExecutor is FlashLoanSimpleReceiverBase {
     (tokenIn, tokenMid, router1, router2, amount) =
         abi.decode(params, (address, address, address, address, uint256));
 
+    uint256 balanceBefore = IERC20(tokenIn).balanceOf(address(this));
+
     IERC20(tokenIn).approve(router1, amount);
 
-    // STEP 1: swap tokenIn -> tokenMid
     _swap(router1, tokenIn, tokenMid, amount);
 
     uint256 midBalance = IERC20(tokenMid).balanceOf(address(this));
 
     IERC20(tokenMid).approve(router2, midBalance);
 
-    // STEP 2: swap tokenMid -> tokenIn
     _swap(router2, tokenMid, tokenIn, midBalance);
+
+    uint256 balanceAfter = IERC20(tokenIn).balanceOf(address(this));
+
+    // 🔥 PROFIT CHECK ON-CHAIN
+    require(balanceAfter > balanceBefore, "NO_PROFIT_REVERT");
 }
+
+
 
     function withdraw(address token) external onlyOwner {
         IERC20(token).transfer(
