@@ -57,10 +57,34 @@ contract FlashLoanExecutor is FlashLoanSimpleReceiverBase {
         return true;
     }
 
-    function _executeStrategy(bytes calldata params) internal {
-        // TODO: qui inseriamo router swaps (Uniswap / Aerodrome)
-        // per ora è placeholder
-    }
+   function _executeStrategy(bytes calldata params) internal {
+
+    /*
+        params encoding (semplice per ora):
+        [tokenIn, tokenMid, router1, router2, amount]
+    */
+
+    address tokenIn;
+    address tokenMid;
+    address router1;
+    address router2;
+    uint256 amount;
+
+    (tokenIn, tokenMid, router1, router2, amount) =
+        abi.decode(params, (address, address, address, address, uint256));
+
+    IERC20(tokenIn).approve(router1, amount);
+
+    // STEP 1: swap tokenIn -> tokenMid
+    _swap(router1, tokenIn, tokenMid, amount);
+
+    uint256 midBalance = IERC20(tokenMid).balanceOf(address(this));
+
+    IERC20(tokenMid).approve(router2, midBalance);
+
+    // STEP 2: swap tokenMid -> tokenIn
+    _swap(router2, tokenMid, tokenIn, midBalance);
+}
 
     function withdraw(address token) external onlyOwner {
         IERC20(token).transfer(
