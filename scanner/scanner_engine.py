@@ -1,11 +1,4 @@
-from scanner.token_list import get_tokens
-from scanner.dex_prices import get_base_dex_price
-from scanner.arbitrage import find_opportunity
-
-
-# MOCK CEX (per ora, poi lo colleghiamo davvero)
-def get_mock_cex_price(symbol):
-    return 1.0
+from scanner.profit_simulator import compute_net_profit
 
 
 def scan_market():
@@ -26,7 +19,10 @@ def scan_market():
         op = find_opportunity(symbol, cex_price, dex_price)
 
         if op:
-            opportunities.append(op)
-            print("OPPORTUNITY:", op)
+            enriched = compute_net_profit(op)
 
-    return sorted(opportunities, key=lambda x: x["spread"], reverse=True)
+            if enriched["net_profit"] > 0:
+                opportunities.append(enriched)
+                print("PROFIT OPPORTUNITY:", enriched)
+
+    return sorted(opportunities, key=lambda x: x["net_profit"], reverse=True)
