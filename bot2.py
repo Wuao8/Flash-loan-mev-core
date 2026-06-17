@@ -1,4 +1,4 @@
-print("FLASH LOAN EXECUTION LAYER START (DEMO MODE)")
+print("FLASH LOAN EXECUTION LAYER START (DEMO SILENT MODE)")
 
 from telegram_notifier import send_telegram
 from scanner.scanner_engine import scan_market
@@ -10,24 +10,29 @@ def main():
     ops = scan_market()
     executable = evaluate_opportunities(ops)
 
+    # SILENT MODE: niente messaggi se non ci sono opportunità
     if not executable:
-        send_telegram("NO REAL EXECUTABLE ARB OPPORTUNITIES FOUND (AFTER SIMULATION)")
-        print("NO EXECUTION")
+        print("NO OPPORTUNITIES (SILENT MODE)")
         return
 
-    msg = "⚡ REALISTIC FLASH LOAN OPPORTUNITIES (DEMO MODE)\n\n"
+    msg = "⚡ FLASH LOAN EXECUTION REPORT (SIMULATED)\n\n"
+
+    total_profit = 0
 
     for i, op in enumerate(executable[:5], 1):
 
+        profit = op["true_net_profit"]
+        total_profit += profit
+
         msg += (
             f"{i}. {op['symbol']}\n"
-            f"True Net Profit: ${op['true_net_profit']:.2f}\n"
+            f"EXECUTED (SIMULATED)\n"
             f"Gross Profit: ${op['net_profit']:.2f}\n"
-            f"Spread: {op['spread']:.2f}%\n"
-            f"Gas Est: {op['estimated_gas']:.4f}\n"
-            f"Flash Fee: {op['estimated_flash_fee']:.4f}\n"
-            f"STATUS: SIMULATED EXECUTION OK\n\n"
+            f"Net Profit: ${profit:.2f}\n"
+            f"Spread: {op['spread']:.2f}%\n\n"
         )
+
+    msg += f"TOTAL SIMULATED PROFIT: ${total_profit:.2f}"
 
     send_telegram(msg)
     print(msg)
