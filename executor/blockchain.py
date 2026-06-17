@@ -23,3 +23,30 @@ ABI = [
 ]
 
 contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI)
+
+def simulate_contract_call(opportunity):
+
+    symbol = opportunity["symbol"]
+    gross = int(opportunity["net_profit"] * 10**6)
+    gas = int(opportunity.get("estimated_gas", 0) * 10**6)
+    fee = int(opportunity.get("estimated_flash_fee", 0) * 10**6)
+
+    # NON invia transazione, solo simulazione locale
+    try:
+        result = contract.functions.executeArbitrage(
+            symbol,
+            gross,
+            gas,
+            fee
+        ).call()
+
+        return {
+            "success": True,
+            "result": result
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
