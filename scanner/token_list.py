@@ -13,56 +13,50 @@ TOKENS_BASE = {
     # =========================
     "cbETH": "0x2Ae3F1Ec7F1F4C74F3F0A1B0A3C8A1A0C0A0000",
     "AERO":  "0x940181A94A35A4569E4529A3CDfB74e38FD98631",
-    "BAL":   "0x...BAL_BASE_ADDRESS...",
-    "UNI":   "0x...UNI_BASE_ADDRESS...",
-    "LINK":  "0x...LINK_BASE_ADDRESS...",
-    "LDO":   "0x...LDO_BASE_ADDRESS...",
-    "CRV":   "0x...CRV_BASE_ADDRESS...",
-    "SNX":   "0x...SNX_BASE_ADDRESS...",
+    "BAL":   "0x4158734D47Fc9692176B5085E0F52ee0Da5d47F1",
+    "UNI":   "0xc3De830EA07524a0761646a6a4e4be0e114a3C83",
+    "LINK":  "0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196",
+    "CRV":   "0x8Ee73c484A26e0A5df2Ee2a4960B789967dd0415",
+    "SNX":   "0x22e6966B799c4D5B13BE962E1D117b56327FDa66",
 
     # =========================
     # BASE ECOSYSTEM TOKENS
     # =========================
-    "DEGEN":   "0x...DEGEN_ADDRESS...",
-    "BRETT":   "0x...BRETT_ADDRESS...",
-    "TOSHI":   "0x...TOSHI_ADDRESS...",
-    "HIGHER":  "0x...HIGHER_ADDRESS...",
-    "MIGGLES": "0x...MIGGLES_ADDRESS...",
-    "BASEDAI": "0x...BASEDAI_ADDRESS...",
-    "DOGINME": "0x...DOGINME_ADDRESS...",
-    "NORMIE":  "0x...NORMIE_ADDRESS...",
+    "DEGEN":   "0x4ed4e862860bed51a9570b96d89af5e1b0efefed",
+    "BRETT":   "0x532f27101965dd16442E59d40670FaF5eBB142E4",
+    "TOSHI":   "0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4",
+    "HIGHER":  "0x0578d8a44db98b23bf096a382e016e29a5ce0ffe",
+    "MIGGLES": "0xB1a03EdA10342529bBF8EB700a06C60441fEf25d",
+    "DOGINME": "0x6921B130D297cc43754afba22e5EAc0FBf8Db75b",
+    "NORMIE":  "0x47b464eDB8Dc9BC67b5CD4C9310BB87b773845bD",
 
     # =========================
     # MEME / HIGH VOL LIQUIDITY
     # =========================
-    "MOCHI":   "0x...MOCHI_ADDRESS...",
-    "AIDOGE":  "0x...AIDOGE_ADDRESS...",
-    "BOB":     "0x...BOB_ADDRESS...",
-    "BISO":    "0x...BISO_ADDRESS...",
-    "PEPEBSC": "0x...PEPE_LIKE_BASE...",
-    "WOJAK":   "0x...WOJAK_BASE...",
+    "MOCHI":   "0xF6e932Ca12afa26665dC4dDE7e27be02A7c02e50",
+    "AIDOGE":  "0xb34457736aa191ff423f84f5d669f68b231e6c4e",
+    "BOB":     "0x6234641eae20d15f803441F348352794419b44c7",
+    "PEPEBSC": "0x52b492a33e447cdb854c7fc19f1e57e8bfa1777d",
+    "WOJAK":   "0xD512B95FC410d365181Afd9db191b078EE07A520",
 
     # =========================
     # ADDITIONAL LIQUID PAIRS
     # =========================
-    "cbBTC": "0x...CBBTC_ADDRESS...",
-    "WBTC":  "0x...WBTC_BASE_ADDRESS...",
-    "rETH":  "0x...RETH_ADDRESS...",
-    "stETH": "0x...STETH_WRAPPED_BASE...",
+    "cbBTC": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+    "rETH":  "0xB6fe221Fe9EeF5aBa221c348bA20A1Bf5e73624c",
+    
 
     # =========================
     # STABLE VARIANTS / BRIDGED
     # =========================
-    "USDT": "0x...USDT_BASE_ADDRESS...",
-    "USDC.e": "0x...USDC_BRIDGED_ADDRESS...",
+    "USDT": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+    "USDbC": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
 
     # =========================
     # LONG TAIL LIQUIDITY (HIGH RISK BUT USEFUL FOR ARB)
     # =========================
-    "MAGIC": "0x...MAGIC_ADDRESS...",
-    "GRT":   "0x...GRT_ADDRESS...",
-    "1INCH": "0x...1INCH_ADDRESS...",
-    "SUSHI": "0x...SUSHI_ADDRESS...",
+    "1INCH": "0xc5fecc3a29fb57b5024eec8a2239d4621e111cbe",
+    "SUSHI": "0x7D49a065D17d6d4a55dc13649901fdBB98B2AFBA",
     "OP":    "0x4200000000000000000000000000000000000042",
 
 }
