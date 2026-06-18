@@ -1,21 +1,19 @@
-BASE_GAS_COST = 0.002  # ETH equivalente stimato su Base (demo)
-FLASH_LOAN_FEE_RATE = 0.0009  # 0.09% tipico Aave-like
-MIN_PROFIT_THRESHOLD = 0.5  # USD
+FLASH_LOAN_FEE_RATE = 0.0009
+MIN_PROFIT_THRESHOLD = 0.05  # molto più realistico per demo
 
 
 def simulate_execution(opportunity):
 
     gross_profit = opportunity["net_profit"]
 
-    # flash loan fee
+    # flash loan fee realistico
     flash_fee = gross_profit * FLASH_LOAN_FEE_RATE
 
-    # gas cost (fixed demo model)
-    gas_cost = BASE_GAS_COST * 3000  # approx tx complexity scaling
+    # gas realistico su Base (range piccolo, non fisso enorme)
+    gas_cost = 0.01  # USD stimato per swap semplice
 
     true_profit = gross_profit - flash_fee - gas_cost
 
-    # validity checks
     if true_profit < MIN_PROFIT_THRESHOLD:
         return {
             "valid": False,
