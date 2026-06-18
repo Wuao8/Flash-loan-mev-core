@@ -22,9 +22,9 @@ def scan_market():
         if not op:
             continue
 
-       op["spread"] = op.get("spread", 0)
+        op["spread"] = op.get("spread", 0)
 
-       enriched = compute_net_profit(op)
+        enriched = compute_net_profit(op)
 
     # sort by profit
     opportunities.sort(key=lambda x: x["net_profit"], reverse=True)
