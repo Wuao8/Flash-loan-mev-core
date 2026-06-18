@@ -19,8 +19,8 @@ def scan_market():
         # 2. find arbitrage opportunity (cross DEX)
         op = find_opportunity(symbol, None, dex_prices)
 
-       if not op:
-           continue
+        if not op:
+            continue
 
        op["spread"] = op.get("spread", 0)
 
