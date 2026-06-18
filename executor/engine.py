@@ -9,6 +9,10 @@ def evaluate_opportunities(opportunities):
 
     for op in opportunities:
 
+        # sicurezza base
+        if not op:
+            continue
+
         result = simulate_execution(op)
 
         if not result or not result.get("valid"):
@@ -16,8 +20,8 @@ def evaluate_opportunities(opportunities):
 
         true_profit = result.get("true_profit", 0)
 
-        # filtro minimo realistico (evita micro noise)
-        if true_profit <= 0:
+        # filtro minimo finale (solo sanity check)
+        if true_profit <= 0.02:
             continue
 
         op["estimated_gas"] = result.get("gas_cost", 0)
@@ -26,4 +30,5 @@ def evaluate_opportunities(opportunities):
 
         executable.append(op)
 
+    # ordina per profitto reale stimato
     return sorted(executable, key=lambda x: x["true_net_profit"], reverse=True)
