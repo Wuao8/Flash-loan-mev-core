@@ -3,15 +3,16 @@ def find_opportunity(symbol, cex_price, dex_price):
     if not cex_price or not dex_price:
         return None
 
-    spread = abs((cex_price - dex_price) / cex_price) * 100
+    spread = ((dex_price - cex_price) / cex_price) * 100
 
-    if spread < 1.0:
+    direction = "DEX->CEX" if dex_price > cex_price else "CEX->DEX"
+
+    # threshold realistico per Base micro-arb
+    if abs(spread) < 0.2:
         return None
 
-    if spread > 25:
+    if abs(spread) > 20:
         return None
-
-    direction = "DEX->CEX" if dex_price < cex_price else "CEX->DEX"
 
     return {
         "symbol": symbol,
