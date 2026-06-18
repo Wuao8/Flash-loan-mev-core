@@ -17,7 +17,7 @@ def scan_market():
         dex_prices = get_token_prices_multi_dex(address)
 
         # 2. find arbitrage opportunity (cross DEX)
-       op = find_opportunity(symbol, None, dex_prices)
+        op = find_opportunity(symbol, None, dex_prices)
 
        if not op:
            continue
